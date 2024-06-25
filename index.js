@@ -4,9 +4,12 @@ const Userrouter = require('./src/api/routes/user')
 const { eventrouter } = require('./src/api/routes/event')
 const { connectcloudinary } = require('./src/config/cloudinary')
 const attenderouter = require('./src/api/routes/attendes')
+const cors = require('cors')
 
 require('dotenv').config()
+
 const app = express()
+app.use(cors())
 connectdb()
 
 connectcloudinary()

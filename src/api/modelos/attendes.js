@@ -20,7 +20,8 @@ const attendeeSchema = new mongoose.Schema({
   registrationDate: {
     type: Date,
     default: Date.now
-  }
+  },
+  emailId: { type: String, required: true }
 })
 
 const Attendee = mongoose.model('attendees', attendeeSchema, 'attendees')

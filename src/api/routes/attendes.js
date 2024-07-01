@@ -1,3 +1,4 @@
+const { isorganizer } = require('../../middleware/isorganizer')
 const {
   getattendees,
   createAttendee,
@@ -6,8 +7,8 @@ const {
 } = require('../controllers/attendes')
 
 const attenderouter = require('express').Router()
-attenderouter.get('/', getattendees)
+attenderouter.get('/', isorganizer, getattendees)
 attenderouter.post('/', createAttendee)
-attenderouter.put('/:id', updateAttendee)
-attenderouter.delete('/:id', deleteAttendee)
+attenderouter.put('/:phonenumber', updateAttendee)
+attenderouter.delete('/:phonenumber', isorganizer, deleteAttendee)
 module.exports = attenderouter

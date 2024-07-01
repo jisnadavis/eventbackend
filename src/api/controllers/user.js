@@ -18,7 +18,7 @@ const registeruser = async (req, res, next) => {
     console.log(newuser.role)
     const userexsist = await User.findOne({ email: newuser.email })
     if (userexsist) {
-      return res.status(400).json('the user is already exisst')
+      return res.status(409).json('the email is already exisst')
     }
 
     const saveuser = await newuser.save()

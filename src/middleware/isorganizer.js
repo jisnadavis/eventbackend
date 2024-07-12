@@ -4,8 +4,10 @@ const { verifytoken } = require('../utils/jwt')
 const isorganizer = async (req, res, next) => {
   try {
     const isauth = req.headers.authorization
+    console.log(isauth)
     const parsedtoken = isauth.split(' ')
     const token = parsedtoken[1]
+    console.log(token)
     const { id } = verifytoken(token)
     const user = await User.findById(id)
     req.user = user

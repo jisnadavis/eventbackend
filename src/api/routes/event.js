@@ -4,11 +4,13 @@ const {
   geteventos,
   createevent,
   updateevent,
-  deleteevent
+  deleteevent,
+  getEventoById
 } = require('../controllers/event')
 
 const eventrouter = require('express').Router()
 eventrouter.get('/', geteventos)
+eventrouter.get('/:eventId', [isorganizer], getEventoById)
 eventrouter.post(
   '/',
   [isorganizer],

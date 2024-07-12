@@ -4,21 +4,15 @@ const Eventos = require('../modelos/event')
 const getattendees = async (req, res, next) => {
   try {
     const requestinguser = req.user
-
-    // Validate user existence
     if (!requestinguser || !requestinguser.id) {
       return res.status(401).json({ message: 'Unauthorized: No user found' })
     }
 
-    // Fetch all events organized by the requesting user
     const events = await Eventos.find({
       eventorganizer: requestinguser.id
     }).select('_id')
 
-    // Extract event IDs
     const eventIds = events.map((event) => event._id)
-
-    // Fetch attendees for the user's events
     const attendees = await Attendee.find({ eventId: { $in: eventIds } })
       .populate('eventId', 'title')
       .exec()
@@ -81,13 +75,14 @@ const updateAttendee = async (req, res, next) => {
     return res.status(400).json('Error updating attendee')
   }
 }
+
 const deleteAttendee = async (req, res, next) => {
   try {
-    const { phonenumber } = req.params
-    const requestinguser = req.user
+    const { id } = req.params // Change to use `id` instead of `phonenumber`
+    const requestingUser = req.user
 
-    // Find the attendee by name
-    const attendee = await Attendee.findOne({ phoneNumber: phonenumber })
+    // Find the attendee by _id
+    const attendee = await Attendee.findById(id)
     if (!attendee) {
       return res.status(404).json({ error: 'Attendee not found' })
     }
@@ -95,23 +90,30 @@ const deleteAttendee = async (req, res, next) => {
     // Populate the eventId field to get event details
     const event = await Eventos.findById(attendee.eventId)
     if (!event) {
-      return res.status(404).json({ error: 'Event not found' })
+      return res.status(405).json({ error: 'Event not found' })
     }
 
-    // Check if the requesting user is the organizer of the event
-    if (event.eventorganizer.toString() !== requestinguser.id) {
+    // Check if the requesting user is one of the organizers of the event
+    const isAuthorized = event.eventorganizer.some(
+      (organizerId) => organizerId.toString() === requestingUser.id
+    )
+    if (!isAuthorized) {
+      console.log(
+        event.eventorganizer.map((organizerId) => organizerId.toString())
+      )
+      console.log(requestingUser.id)
       return res.status(403).json({
         error: 'You are not authorized to delete this attendee'
       })
     }
 
     // Delete the attendee
-    await Attendee.deleteOne({ phoneNumber: phonenumber })
+    await Attendee.findByIdAndDelete(id)
 
     return res.status(200).json({ message: 'Attendee deleted successfully' })
   } catch (error) {
     console.log(error)
-    return res.status(400).json('Error deleting attendee')
+    return res.status(400).json({ error: 'Error deleting attendee' })
   }
 }
 

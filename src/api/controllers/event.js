@@ -14,6 +14,24 @@ const geteventos = async (req, res, next) => {
     return res.status(400).json('error in showing errors')
   }
 }
+const getEventoById = async (req, res, next) => {
+  try {
+    const { eventId } = req.params
+    const evento = await Eventos.findById(eventId)
+      .populate('eventorganizer', 'name')
+      .exec()
+
+    if (!evento) {
+      return res.status(404).json({ message: 'Event not found' })
+    }
+
+    return res.status(200).json(evento)
+  } catch (error) {
+    console.log(error)
+    return res.status(400).json('error in showing event')
+  }
+}
+
 const createevent = async (req, res, next) => {
   try {
     const { title, date, location, description } = req.body
@@ -61,19 +79,22 @@ const updateevent = async (req, res, next) => {
     if (!requestinguser || !requestinguser.id) {
       return res.status(401).json({ message: 'Unauthorized: No user found' })
     }
+
     // Find the existing event
     const oldevent = await Eventos.findById(id)
     if (!oldevent) {
       return res.status(404).json({ message: 'Event not found' })
     }
-    if (oldevent.eventorganizer.toString() !== requestinguser.id) {
+
+    // Check if the requesting user is the organizer
+    if (!oldevent.eventorganizer.includes(requestinguser.id)) {
       return res
         .status(403)
         .json({ message: 'You are not the organizer of this event' })
     }
 
+    // Update fields if they are provided
     if (title) oldevent.title = title
-
     if (date) {
       const parsedDate = new Date(date)
       if (!isNaN(parsedDate.getTime())) {
@@ -82,20 +103,30 @@ const updateevent = async (req, res, next) => {
         return res.status(400).json({ message: 'Invalid date format' })
       }
     }
-
     if (location) oldevent.location = location
     if (description) oldevent.description = description
 
+    // Update event organizer if provided
     if (eventorganizer) {
       try {
         const organizerArray = JSON.parse(eventorganizer)
-        oldevent.eventorganizer = organizerArray.map((id) => {
-          if (mongoose.Types.ObjectId.isValid(id)) {
-            return new mongoose.Types.ObjectId(id)
-          } else {
-            throw new Error(`Invalid ObjectId: ${id}`)
-          }
-        })
+        if (!Array.isArray(organizerArray)) {
+          return res
+            .status(400)
+            .json({ message: 'Event organizer should be an array' })
+        }
+
+        const validOrganizers = organizerArray.filter((id) =>
+          mongoose.Types.ObjectId.isValid(id)
+        )
+        if (validOrganizers.length !== organizerArray.length) {
+          return res.status(400).json({ message: 'Invalid organizer IDs' })
+        }
+
+        // Merge the new organizers with the existing ones
+        oldevent.eventorganizer = Array.from(
+          new Set([...oldevent.eventorganizer, ...validOrganizers])
+        )
       } catch (err) {
         return res
           .status(400)
@@ -103,6 +134,7 @@ const updateevent = async (req, res, next) => {
       }
     }
 
+    // Update the event image if a file is provided
     if (req.file) {
       if (oldevent.eventimg) {
         try {
@@ -117,13 +149,13 @@ const updateevent = async (req, res, next) => {
 
     // Save the updated event
     const eventupdated = await oldevent.save()
-
     return res.status(200).json(eventupdated)
   } catch (error) {
     console.error(error)
     return res.status(400).json('Unable to update event')
   }
 }
+
 const deleteevent = async (req, res, next) => {
   try {
     const { id } = req.params
@@ -162,4 +194,10 @@ const deleteevent = async (req, res, next) => {
   }
 }
 
-module.exports = { geteventos, createevent, updateevent, deleteevent }
+module.exports = {
+  geteventos,
+  createevent,
+  updateevent,
+  deleteevent,
+  getEventoById
+}

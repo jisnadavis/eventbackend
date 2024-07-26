@@ -21,6 +21,9 @@ connectdb()
 
 connectcloudinary()
 app.use(express.json())
+app.get('/', (req, res) => {
+  res.send('Hello, World!')
+})
 app.use('/api/v1/users', Userrouter)
 app.use('/api/v1/events', eventrouter)
 app.use('/api/v1/attende', attenderouter)

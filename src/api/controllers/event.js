@@ -61,7 +61,7 @@ const createevent = async (req, res, next) => {
 
     await newEvent.save()
 
-    return res.status(201).json(newEvent)
+    return res.status(200).json(newEvent)
   } catch (error) {
     console.log(error)
     return res

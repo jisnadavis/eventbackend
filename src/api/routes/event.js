@@ -12,7 +12,7 @@ const eventrouter = require('express').Router()
 eventrouter.get('/', geteventos)
 eventrouter.get('/:eventId', [isorganizer], getEventoById)
 eventrouter.post(
-  '/',
+  '/createevent',
   [isorganizer],
   uploadfolder('event').single('eventimg'),
   createevent

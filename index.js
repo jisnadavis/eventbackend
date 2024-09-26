@@ -13,10 +13,10 @@ app.use(
   cors({
     origin: '*', // Allow all origins
     methods: 'GET,POST,PUT,DELETE,OPTIONS', // Allowed methods
-    allowedHeaders: 'Content-Type, Authorization' // Allowed headers
+    allowedHeaders: 'Content-Type, Authorization'
   })
 )
-
+app.options('*', cors())
 connectdb()
 
 connectcloudinary()
